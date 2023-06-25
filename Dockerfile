@@ -15,5 +15,5 @@ COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 COPY run.py ./
 COPY image.png ./
-COPY best.onnx ./
+COPY best.* ./
 CMD ["python", "run.py"]
