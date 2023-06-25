@@ -2,6 +2,8 @@ import time
 
 import torch
 import torchvision
+
+
 # from PIL import Image
 
 
@@ -46,7 +48,6 @@ def xywh2xyxy(x):
     y[..., 2] = x[..., 0] + x[..., 2] / 2  # bottom right x
     y[..., 3] = x[..., 1] + x[..., 3] / 2  # bottom right y
     return y
-
 
 
 def box_iou(box1, box2, eps=1e-7):
@@ -211,42 +212,48 @@ import numpy as np
 
 import cv2
 
+
+def process_image(session, image_path):
+    img = cv2.imread(image_path)
+    im = letterbox(img, (640, 640), stride=32, auto=False)[0]  # padded resize
+    im = im.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
+    im = np.ascontiguousarray(im)  # contiguous
+
+    im = im.astype("float32") / 255
+
+    output_names = [x.name for x in session.get_outputs()]
+    meta = session.get_modelmeta().custom_metadata_map  # metadata
+
+    y = session.run(output_names, {session.get_inputs()[0].name: np.array([im.astype("float32")])})
+
+    output = torch.from_numpy(y[0]).to("cpu")
+
+    pred = non_max_suppression(output, 0.25, 0.45, classes=None, agnostic=False, max_det=1000)[
+        0]  # , classes, agnostic_nms, max_det=max_det)
+
+    # rescale
+    pred[:, 0] = pred[:, 0] / 640 * img.shape[1]
+    pred[:, 1] = pred[:, 1] / 640 * img.shape[0]
+    pred[:, 2] = pred[:, 2] / 640 * img.shape[1]
+    pred[:, 3] = pred[:, 3] / 640 * img.shape[0]
+
+    return pred
+
+
+n_iterations = 1000
+
 start = time.time()
-img = cv2.imread(image_path)
-im = letterbox(img, (640, 640), stride=32, auto=False)[0]  # padded resize
-im = im.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
-im = np.ascontiguousarray(im)  # contiguous
-# img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-# resized = cv2.resize(img, (640,640), interpolation = cv2.INTER_AREA).astype(np.float32)/255
-# resized = resized.transpose((2, 0, 1))
-
-im = im.astype("float32") / 255
-
-# im = letterbox(im0, self.img_size, stride=self.stride, auto=self.auto)[0]  # padded resize
-# im = resized.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
-# im = np.ascontiguousarray(im) # contiguous
-
 session = ort.InferenceSession("best.onnx", providers=["CPUExecutionProvider"])
-output_names = [x.name for x in session.get_outputs()]
-meta = session.get_modelmeta().custom_metadata_map  # metadata
-
-y = session.run(output_names, {session.get_inputs()[0].name: np.array([im.astype("float32")])})
-
-output = torch.from_numpy(y[0]).to("cpu")
-
-pred = non_max_suppression(output, 0.25, 0.45, classes=None, agnostic=False, max_det=1000)[0]  # , classes, agnostic_nms, max_det=max_det)
-
-# rescale
-pred[:, 0] = pred[:, 0]/640*img.shape[1]
-pred[:, 1] = pred[:, 1]/640*img.shape[0]
-pred[:, 2] = pred[:, 2]/640*img.shape[1]
-pred[:, 3] = pred[:, 3]/640*img.shape[0]
+for _ in range(n_iterations):
+    _ = process_image(session, image_path)
 end = time.time()
+
+duration = end - start
 
 # Print Result
 # predicted, actual = classes[outputs[0][0].argmax(0)], classes[y]
 # print(f'Predicted: "{predicted}", Actual: "{actual}"')
-print(f"Output ONNX: {pred}")
+# print(f"Output ONNX: {pred}")
 # print(f"Output PyTorch: {results.pred[0]}")
-print("Duration", (end - start))
-
+print("Duration", duration)
+print("Duration per Cycle", duration/n_iterations)
