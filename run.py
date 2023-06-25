@@ -4,7 +4,7 @@ import torch
 import torchvision
 
 
-# from PIL import Image
+from PIL import Image
 
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
@@ -195,16 +195,27 @@ def non_max_suppression(
 #
 # print("Starting Inference...")
 #
-# start = time.time()
+
+# results.show()
+
 image_path = 'image.png'
-# img = Image.open(image_path)
-# # display(img)
-# results = yoloModel(image_path)
-# end = time.time()
+n_iterations = 1000
+
+print("Torch Section")
+yoloModel = torch.hub.load('ultralytics/yolov5', 'custom', path="best.pt")
+
+start = time.time()
+img = Image.open(image_path)
+# display(img)
+results = yoloModel(image_path)
+end = time.time()
+
+duration = end - start
+print("Duration", duration)
+print("Duration per Cycle", duration/n_iterations)
 #
 # print('results', results)
 # print("Duration", (end - start))
-# results.show()
 
 print("ONNX Section")
 import onnxruntime as ort
@@ -238,9 +249,6 @@ def process_image(session, image_path):
     pred[:, 3] = pred[:, 3] / 640 * img.shape[0]
 
     return pred
-
-
-n_iterations = 1000
 
 start = time.time()
 session = ort.InferenceSession("best.onnx", providers=["CPUExecutionProvider"])
