@@ -2,7 +2,7 @@ import time
 
 import torch
 import torchvision
-from PIL import Image
+# from PIL import Image
 
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
@@ -190,19 +190,19 @@ def non_max_suppression(
 # artifact = run.use_artifact('n-mallouli/Yolov5/run_iy2du03r_model:v0', type='model')
 # artifact_dir = artifact.download()
 # weights_path = f"{artifact_dir}/best.pt"
-yoloModel = torch.hub.load('ultralytics/yolov5', 'custom', path="best.pt")
-
-print("Starting Inference...")
-
-start = time.time()
+# yoloModel = torch.hub.load('ultralytics/yolov5', 'custom', path="best.pt")
+#
+# print("Starting Inference...")
+#
+# start = time.time()
 image_path = 'image.png'
-img = Image.open(image_path)
-# display(img)
-results = yoloModel(image_path)
-end = time.time()
-
-print('results', results)
-print("Duration", (end - start))
+# img = Image.open(image_path)
+# # display(img)
+# results = yoloModel(image_path)
+# end = time.time()
+#
+# print('results', results)
+# print("Duration", (end - start))
 # results.show()
 
 print("ONNX Section")
@@ -247,6 +247,6 @@ end = time.time()
 # predicted, actual = classes[outputs[0][0].argmax(0)], classes[y]
 # print(f'Predicted: "{predicted}", Actual: "{actual}"')
 print(f"Output ONNX: {pred}")
-print(f"Output PyTorch: {results.pred[0]}")
+# print(f"Output PyTorch: {results.pred[0]}")
 print("Duration", (end - start))
 
