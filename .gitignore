@@ -1,0 +1,5 @@
+/pod.yaml
+/artifacts/
+/venv/
+/wandb/
+.idea/
