@@ -1,12 +1,9 @@
-import os
 import time
 
-import torchvision
-from onnx.reference.ops.op_non_max_suppression import NonMaxSuppression
-
-import wandb
 import torch
+import torchvision
 from PIL import Image
+
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
     # Resize and pad image while meeting stride-multiple constraints
@@ -237,13 +234,19 @@ y = session.run(output_names, {session.get_inputs()[0].name: np.array([im.astype
 
 output = torch.from_numpy(y[0]).to("cpu")
 
-pred = non_max_suppression(output, 0.25, 0.45, classes=None, agnostic=False, max_det=1000)  # , classes, agnostic_nms, max_det=max_det)
+pred = non_max_suppression(output, 0.25, 0.45, classes=None, agnostic=False, max_det=1000)[0]  # , classes, agnostic_nms, max_det=max_det)
+
+# rescale
+pred[:, 0] = pred[:, 0]/640*img.shape[1]
+pred[:, 1] = pred[:, 1]/640*img.shape[0]
+pred[:, 2] = pred[:, 2]/640*img.shape[1]
+pred[:, 3] = pred[:, 3]/640*img.shape[0]
 end = time.time()
 
 # Print Result
 # predicted, actual = classes[outputs[0][0].argmax(0)], classes[y]
 # print(f'Predicted: "{predicted}", Actual: "{actual}"')
-print(f"Output: {pred}")
-print(f"Output 1: {results.pred[0]}")
+print(f"Output ONNX: {pred}")
+print(f"Output PyTorch: {results.pred[0]}")
 print("Duration", (end - start))
 
