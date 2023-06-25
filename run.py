@@ -205,9 +205,10 @@ print("Torch Section")
 yoloModel = torch.hub.load('ultralytics/yolov5', 'custom', path="best.pt")
 
 start = time.time()
-img = Image.open(image_path)
-# display(img)
-results = yoloModel(image_path)
+for _ in range(n_iterations):
+    img = Image.open(image_path)
+    # display(img)
+    results = yoloModel(image_path)
 end = time.time()
 
 duration = end - start
