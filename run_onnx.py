@@ -3,8 +3,6 @@ import time
 import torch
 import torchvision
 
-from PIL import Image
-
 
 def letterbox(im, new_shape=(640, 640), color=(114, 114, 114), auto=True, scaleFill=False, scaleup=True, stride=32):
     # Resize and pad image while meeting stride-multiple constraints
